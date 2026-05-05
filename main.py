@@ -531,7 +531,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
     elif data.startswith("page_"):
-        # Handle pagination
         parts    = data.replace("page_", "").split("_", 1)
         page     = int(parts[0])
         rest     = parts[1] if len(parts) > 1 else ""
@@ -540,14 +539,40 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         state    = p2[1] if len(p2) > 1 else ""
 
         cache = _job_cache.get(user_id)
+
+        # If no cache or going beyond cached pages — fetch fresh jobs!
+        if not cache or page * JOBS_PER_PAGE >= len(cache["jobs"]):
+            await query.edit_message_text(
+                f"⏳ Fetching more *{cat_name}* jobs...",
+                parse_mode="Markdown"
+            )
+            keyword  = categories.get(cat_name, cat_name)
+            new_jobs = fetch_live_jobs_from_api(keyword, state)
+
+            if cache and new_jobs:
+                # Add new jobs to cache avoiding duplicates
+                existing_links = {j.get("job_apply_link") for j in cache["jobs"]}
+                unique_new     = [j for j in new_jobs if j.get("job_apply_link") not in existing_links]
+                cache["jobs"].extend(unique_new)
+                cache["total_pages"] = max(1, (len(cache["jobs"]) + JOBS_PER_PAGE - 1) // JOBS_PER_PAGE)
+                _job_cache[user_id]  = cache
+            elif new_jobs:
+                total_pages = max(1, (len(new_jobs) + JOBS_PER_PAGE - 1) // JOBS_PER_PAGE)
+                _job_cache[user_id] = {"jobs": new_jobs, "cat": cat_name, "state": state, "keyword": keyword, "total_pages": total_pages}
+                cache = _job_cache[user_id]
+
         if not cache:
             await query.edit_message_text("⏳ Session expired! Please /start again.")
             return
 
         jobs        = cache["jobs"]
         total_pages = cache["total_pages"]
-        text        = format_jobs_page(jobs, page, total_pages, cat_name, state)
 
+        # If page is beyond available jobs reset to last page
+        if page >= total_pages:
+            page = total_pages - 1
+
+        text = format_jobs_page(jobs, page, total_pages, cat_name, state)
         await query.edit_message_text(
             text,
             parse_mode="Markdown",
