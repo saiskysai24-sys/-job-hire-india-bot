@@ -13,6 +13,7 @@ JOBS_PER_PAGE = 10
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
 # ── JOB CACHE SYSTEM ──────────────────────────────────────
+# Cache is cleared on every restart — always fresh!
 # Jobs are fetched once every 6 hours and cached
 # All users read from cache — saves API quota!
 import time
@@ -39,9 +40,12 @@ def get_cached_jobs(keyword, state):
     logging.info(f"Cache MISS for '{cache_key}' — fetching from API...")
     jobs = fetch_live_jobs_from_api(keyword, state)
 
-    # Store in cache
-    _cache_store[cache_key] = {"jobs": jobs, "timestamp": now}
-    logging.info(f"Cached {len(jobs)} jobs for '{cache_key}'")
+    # Only cache if we got results
+    if jobs:
+        _cache_store[cache_key] = {"jobs": jobs, "timestamp": now}
+        logging.info(f"Cached {len(jobs)} jobs for '{cache_key}'")
+    else:
+        logging.info(f"No jobs fetched for '{cache_key}' — not caching")
     return jobs
 
 def get_cache_status():
@@ -505,8 +509,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown"
         )
 
-        # Fetch all jobs
-        jobs = fetch_live_jobs(keyword, state) if cat_name in LIVE_JOB_CATEGORIES else []
+        # Fetch fresh jobs directly from API (bypass cache for first load)
+        jobs = fetch_live_jobs_from_api(keyword, state) if cat_name in LIVE_JOB_CATEGORIES else []
 
         # Cache jobs for pagination
         total_pages = max(1, (len(jobs) + JOBS_PER_PAGE - 1) // JOBS_PER_PAGE) if jobs else 1
