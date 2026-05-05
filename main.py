@@ -450,18 +450,17 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def testapi(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("⏳ Testing JSearch API...")
     try:
-        url = "https://jsearch.p.rapidapi.com/search-v2"
+        url = "https://jsearch.p.rapidapi.com/search"
         headers = {
             "X-RapidAPI-Key": JSEARCH_KEY,
-            "X-RapidAPI-Host": "jsearch.p.rapidapi.com",
-            "Content-Type": "application/json"
+            "X-RapidAPI-Host": "jsearch.p.rapidapi.com"
         }
         params = {
             "query": "software developer jobs in India",
             "page": "1",
             "num_pages": "1",
             "country": "in",
-            "date_posted": "all"
+            "date_posted": "week"
         }
         resp = requests.get(url, headers=headers, params=params, timeout=15)
         msg = f"Status: {resp.status_code}\n"
