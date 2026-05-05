@@ -450,16 +450,32 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def testapi(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("⏳ Testing JSearch API...")
     try:
-        jobs = fetch_live_jobs("software developer", "Telangana")
+        url = "https://jsearch.p.rapidapi.com/search-v2"
+        headers = {
+            "X-RapidAPI-Key": JSEARCH_KEY,
+            "X-RapidAPI-Host": "jsearch.p.rapidapi.com",
+            "Content-Type": "application/json"
+        }
+        params = {
+            "query": "software developer jobs in India",
+            "page": "1",
+            "num_pages": "1",
+            "country": "in",
+            "date_posted": "all"
+        }
+        resp = requests.get(url, headers=headers, params=params, timeout=15)
+        msg = f"Status: {resp.status_code}\n"
+        data = resp.json()
+        msg += f"Keys: {list(data.keys())}\n"
+        jobs = data.get("data", [])
+        msg += f"Jobs found: {len(jobs)}\n"
         if jobs:
-            msg = f"✅ JSearch API Working! Got {len(jobs)} jobs:\n\n"
-            for j in jobs[:3]:
-                msg += f"• {j.get('job_title')} — {j.get('employer_name','')}\n"
+            msg += f"First job: {jobs[0].get('job_title')} — {jobs[0].get('employer_name')}"
         else:
-            msg = "❌ API returned 0 jobs"
+            msg += f"Raw response: {str(data)[:200]}"
         await update.message.reply_text(msg)
     except Exception as e:
-        await update.message.reply_text(f"❌ API Error: {e}")
+        await update.message.reply_text(f"❌ Error: {e}")
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query   = update.callback_query
