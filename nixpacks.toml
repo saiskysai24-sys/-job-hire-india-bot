@@ -1,1 +1,5 @@
-nixpacks.toml
+[phases.setup]
+nixPkgs = ["python311"]
+
+[start]
+cmd = "python main.py"
