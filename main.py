@@ -7,7 +7,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Cont
 TOKEN        = os.environ.get("TOKEN", "YOUR_BOT_TOKEN_HERE")
 ADMIN_ID     = int(os.environ.get("ADMIN_ID", "648488426"))
 WEBSITE_BASE = "https://job-hire-india-web-production.up.railway.app"
-JSEARCH_KEY  = "2b6a0da0dcmshe4ac8f02a58e471p11e577jsn12b21548bb48"
+JSEARCH_KEY  = os.environ.get("JSEARCH_KEY", "659078cdc5msh89b4ddcf6400245p146256jsn8c6a0e120b64")
 JOBS_PER_PAGE = 10
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
