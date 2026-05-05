@@ -4,7 +4,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
 # ── CONFIG ────────────────────────────────────────────────
-TOKEN        = os.environ.get("TOKEN", "8616226817:AAHR-JpgZCl5c-6SbJsZoWcmhOONVCi2CaU")
+TOKEN        = os.environ.get("TOKEN", "YOUR_BOT_TOKEN_HERE")
 ADMIN_ID     = int(os.environ.get("ADMIN_ID", "648488426"))
 WEBSITE_BASE = "https://job-hire-india-web-production.up.railway.app"
 JSEARCH_KEY  = "2b6a0da0dcmshe4ac8f02a58e471p11e577jsn12b21548bb48"
@@ -652,7 +652,8 @@ async def alert_scheduler(bot):
 def main():
     init_db()
     print("✅ Job Hire India Bot is Starting...")
-    app = Application.builder().token(TOKEN).build()
+    from telegram.ext import ApplicationBuilder
+    app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start",     start))
     app.add_handler(CommandHandler("help",      help_command))
     app.add_handler(CommandHandler("latest",    latest_command))
