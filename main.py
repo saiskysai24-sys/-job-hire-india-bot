@@ -451,6 +451,20 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         msg += f"• [{j['title']}]({j['link']}) — {j['company']} | {j['location']}\n"
     await update.message.reply_text(msg, parse_mode="Markdown", disable_web_page_preview=True)
 
+async def debug2(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("⏳ Testing direct fetch...")
+    try:
+        jobs = fetch_live_jobs_from_api("software developer", "Telangana")
+        if jobs:
+            msg = f"✅ Got {len(jobs)} jobs!\n\n"
+            for j in jobs[:3]:
+                msg += f"• {j.get('job_title')} — {j.get('employer_name','')}\n"
+        else:
+            msg = "❌ fetch_live_jobs_from_api returned 0 jobs"
+        await update.message.reply_text(msg)
+    except Exception as e:
+        await update.message.reply_text(f"❌ Error: {e}")
+
 async def testapi(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("⏳ Testing JSearch API...")
     try:
@@ -509,8 +523,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown"
         )
 
-        # Fetch fresh jobs directly from API (bypass cache for first load)
-        jobs = fetch_live_jobs_from_api(keyword, state) if cat_name in LIVE_JOB_CATEGORIES else []
+        # Fetch fresh jobs directly from API
+        if cat_name in LIVE_JOB_CATEGORIES:
+            logging.info(f"Fetching jobs for: {keyword} in {state}")
+            jobs = fetch_live_jobs_from_api(keyword, state)
+            logging.info(f"Got {len(jobs)} jobs")
+        else:
+            jobs = []
 
         # Cache jobs for pagination
         total_pages = max(1, (len(jobs) + JOBS_PER_PAGE - 1) // JOBS_PER_PAGE) if jobs else 1
@@ -706,6 +725,7 @@ def main():
     app.add_handler(CommandHandler("addjob",    addjob))
     app.add_handler(CommandHandler("broadcast", broadcast))
     app.add_handler(CommandHandler("testapi",   testapi))
+    app.add_handler(CommandHandler("debug2",    debug2))
     app.add_handler(CommandHandler("refresh",   refresh_cache))
     app.add_handler(CallbackQueryHandler(button_handler))
 
