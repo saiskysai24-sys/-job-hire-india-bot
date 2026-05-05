@@ -1,4 +1,4 @@
 python-telegram-bot==21.3
-requests==2.31.0
+httpx==0.24.1
 requests==2.31.0
 anyio==3.7.1
